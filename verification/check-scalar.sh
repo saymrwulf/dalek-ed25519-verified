@@ -7,7 +7,7 @@ source ~/aeneas-toolchain/env.sh
 HERE="$(cd "$(dirname "$0")" && pwd)"
 AENEAS_LEAN="$AENEAS_HOME/backends/lean"
 GEN=(CurveScalar/TypesExternal CurveScalar/Types CurveScalar/FunsExternal CurveScalar/Funs)
-PROOFS=(ScalarDenote)
+PROOFS=(ScalarDenote ScalarLoop)
 
 echo "=== stub/axiom audit ==="
 grep -rnE '^(private |protected |noncomputable )*axiom ' "$HERE"/Proofs/Scalar*.lean 2>/dev/null && { echo "axiom under Proofs/"; exit 1; }
