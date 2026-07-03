@@ -7,7 +7,7 @@ source ~/aeneas-toolchain/env.sh
 HERE="$(cd "$(dirname "$0")" && pwd)"
 AENEAS_LEAN="$AENEAS_HOME/backends/lean"
 GEN=(CurveScalar/TypesExternal CurveScalar/Types CurveScalar/FunsExternal CurveScalar/Funs)
-PROOFS=(ScalarDenote ScalarLoop ScalarSubSpec)
+PROOFS=(ScalarDenote ScalarLoop ScalarSubSpec ScalarAddSpec)
 
 echo "=== stub/axiom audit ==="
 grep -rnE '^(private |protected |noncomputable )*axiom ' "$HERE"/Proofs/Scalar*.lean 2>/dev/null && { echo "axiom under Proofs/"; exit 1; }
@@ -28,14 +28,14 @@ lake env bash -c "
   export LEAN_PATH=\"\$LEAN_PATH:$HERE/gen:$HERE\"
   cd '$HERE'
   AUD=\$(mktemp '$HERE/.audit-scalar-XXXX.lean')
-  { echo 'import Proofs.ScalarDenote'; echo 'import Proofs.ScalarSubSpec'; echo '#print axioms ScalarProofs.L_val'
+  { echo 'import Proofs.ScalarDenote'; echo 'import Proofs.ScalarSubSpec'; echo 'import Proofs.ScalarAddSpec'; echo '#print axioms ScalarProofs.L_val'
     echo '#print axioms ScalarProofs.sub_loop_spec'
-    echo '#print axioms ScalarProofs.cond_add_l_one_spec'; echo '#print axioms ScalarProofs.sub_val_spec'; } > \"\$AUD\"
+    echo '#print axioms ScalarProofs.cond_add_l_one_spec'; echo '#print axioms ScalarProofs.sub_val_spec'; echo '#print axioms ScalarProofs.add_val_spec'; } > \"\$AUD\"
   OUT=\$(LEAN_TIMEOUT=120 LEAN_MEM_MB=4096 '$HERE/lean-guard' \"\$AUD\" 2>&1)
   echo \"\$OUT\"
   rm -f \"\$AUD\" \"\${AUD%.lean}.olean\"
   N=\$(echo \"\$OUT\" | grep -cF \"depends on axioms: [propext, Classical.choice, Quot.sound]\" || true)
-  [ \"\$N\" -eq 4 ] || { echo \"AXIOM AUDIT FAILED: \$N/4 clean\"; exit 1; }
+  [ \"\$N\" -eq 5 ] || { echo \"AXIOM AUDIT FAILED: \$N/5 clean\"; exit 1; }
 " || { echo FAIL; exit 1; }
 echo "  L_val axiom-clean"
 

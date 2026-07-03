@@ -720,7 +720,7 @@ theorem sub_val_spec (a b : Sc)
     (hb : (↑b : List U64) = [b0, b1, b2, b3, b4])
     (hab : a0.val < 2^52 ∧ a1.val < 2^52 ∧ a2.val < 2^52 ∧ a3.val < 2^52 ∧ a4.val < 2^52)
     (hbb : b0.val < 2^52 ∧ b1.val < 2^52 ∧ b2.val < 2^52 ∧ b3.val < 2^52 ∧ b4.val < 2^52)
-    (hcb : scVal b < Ell) :
+    (hcb : scVal b ≤ Ell) :
     backend.serial.u64.scalar.Scalar52.sub a b
       ⦃ r => scDenote r = scDenote a - scDenote b ⦄ := by
   obtain ⟨hA0, hA1, hA2, hA3, hA4⟩ := hab
@@ -793,7 +793,7 @@ theorem sub_val_spec (a b : Sc)
         671914833335277 3916664325105025 1367801 0 17592186044416
         γ1 γ2 γ3 γ4 γ5 hf0 hf1 hf2 hf3 hf4
       unfold scLimbs; rw [← hLsum]; linear_combination h
-    have hblt : scLimbs b0 b1 b2 b3 b4 < Ell := by rw [← hsvb]; exact hcb
+    have hblt : scLimbs b0 b1 b2 b3 b4 ≤ Ell := by rw [← hsvb]; exact hcb
     -- γ5 = 1, derived with scLimbs kept as opaque atoms (no 2^52i unfold →
     -- omega stays cheap: 4 atoms + one 2^260 literal + Ell as an atom)
     have hrlt : scLimbs r0 r1 r2 r3 r4 < 2^260 := by unfold scLimbs; omega

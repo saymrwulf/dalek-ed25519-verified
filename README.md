@@ -27,7 +27,7 @@ in this repository.
 |-------|-------------|--------|-----------------------|
 | Field 𝔽_p          | `fieldImplementation`    | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
 | Group law (Edwards) | `edwardsImplementation`  | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
-| Scalar mod ℓ        | `scalarImplementation` (planned; `sub_val_spec` ✅, `L_val`, loop specs proven)   | 🔨 sub done · add/mul next | denotation + L=ℓ + FULL sub (⟦sub a b⟧=⟦a⟧−⟦b⟧ in ZMod ℓ) proven; add & Montgomery mul next |
+| Scalar mod ℓ        | `add_val_spec` ✅ `sub_val_spec` ✅ (`scalarImplementation` aggregate planned) | 🔨 add+sub done · mul next | ⟦add a b⟧=⟦a⟧+⟦b⟧ and ⟦sub a b⟧=⟦a⟧−⟦b⟧ in ZMod ℓ proven on dalek; ×3 port & Montgomery mul next |
 | Signature (EdDSA)   | `verifyEquation` (planned)          | ⏳ planned | — |
 
 Status legend: ✅ proven & axiom-audited · ⏳ in progress · ❌ not started.
