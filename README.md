@@ -27,7 +27,7 @@ in this repository.
 |-------|-------------|--------|-----------------------|
 | Field 𝔽_p          | `fieldImplementation`    | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
 | Group law (Edwards) | `edwardsImplementation`  | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
-| Scalar mod ℓ        | `scalarImplementation` (planned; `L_val` proven)   | 🔨 foundation | denotation + L=ℓ proven; add/sub/mul in progress |
+| Scalar mod ℓ        | `scalarImplementation` (planned; `L_val`, `sub_loop_spec`, `cond_add_l_*_spec` proven)   | 🔨 foundation+sub | denotation + L=ℓ + sub borrow/carry chains proven; sub value-assembly & mul in progress |
 | Signature (EdDSA)   | `verifyEquation` (planned)          | ⏳ planned | — |
 
 Status legend: ✅ proven & axiom-audited · ⏳ in progress · ❌ not started.

@@ -7,7 +7,7 @@ source ~/aeneas-toolchain/env.sh
 HERE="$(cd "$(dirname "$0")" && pwd)"
 AENEAS_LEAN="$AENEAS_HOME/backends/lean"
 GEN=(CurveScalar/TypesExternal CurveScalar/Types CurveScalar/FunsExternal CurveScalar/Funs)
-PROOFS=(ScalarDenote ScalarLoop)
+PROOFS=(ScalarDenote ScalarLoop ScalarSubSpec)
 
 echo "=== stub/axiom audit ==="
 grep -rnE '^(private |protected |noncomputable )*axiom ' "$HERE"/Proofs/Scalar*.lean 2>/dev/null && { echo "axiom under Proofs/"; exit 1; }
@@ -28,12 +28,14 @@ lake env bash -c "
   export LEAN_PATH=\"\$LEAN_PATH:$HERE/gen:$HERE\"
   cd '$HERE'
   AUD=\$(mktemp '$HERE/.audit-scalar-XXXX.lean')
-  { echo 'import Proofs.ScalarDenote'; echo '#print axioms ScalarProofs.L_val'; } > \"\$AUD\"
+  { echo 'import Proofs.ScalarDenote'; echo 'import Proofs.ScalarSubSpec'; echo '#print axioms ScalarProofs.L_val'
+    echo '#print axioms ScalarProofs.sub_loop_spec'
+    echo '#print axioms ScalarProofs.cond_add_l_one_spec'; } > \"\$AUD\"
   OUT=\$(LEAN_TIMEOUT=120 LEAN_MEM_MB=4096 '$HERE/lean-guard' \"\$AUD\" 2>&1)
   echo \"\$OUT\"
   rm -f \"\$AUD\" \"\${AUD%.lean}.olean\"
-  echo \"\$OUT\" | grep -qF \"depends on axioms: [propext, Classical.choice, Quot.sound]\" || {
-    echo 'AXIOM AUDIT FAILED: L_val not clean'; exit 1; }
+  N=\$(echo \"\$OUT\" | grep -cF \"depends on axioms: [propext, Classical.choice, Quot.sound]\" || true)
+  [ \"\$N\" -eq 3 ] || { echo \"AXIOM AUDIT FAILED: \$N/3 clean\"; exit 1; }
 " || { echo FAIL; exit 1; }
 echo "  L_val axiom-clean"
 
