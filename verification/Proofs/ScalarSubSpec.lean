@@ -51,6 +51,7 @@ open curve25519_dalek
 
 set_option maxHeartbeats 4000000
 set_option linter.unusedSimpArgs false
+set_option exponentiation.threshold 300
 
 namespace ScalarProofs
 
@@ -705,32 +706,111 @@ theorem add_telescope
         + (c0 + 2^52*c1 + 2^104*c2 + 2^156*c3 + 2^208*c4) := by
   omega
 
-/-! ### Top-level `sub_val_spec` — remaining assembly (no `sorry` shipped)
+/-! ### Top-level subtraction value spec -/
 
-Every mechanically hard piece is proven above and kernel-checked:
-  • `sub_loop_spec`   — the full 5-limb borrow chain (wrapping_sub, mask,
-                        borrow-out bit): the loop unroll that blocked the
-                        earlier attempt;
-  • `cond_add_l_zero_spec`, `cond_add_l_one_spec` — both conditional-add-ℓ
-                        cases, full carry chains (the condition-1 case drives
-                        the write-back through a stepped `csel_step` so the
-                        `index_mut` matches `sub_loop`'s working pattern);
-  • `sub_telescope`, `add_telescope` — the 2⁵²ⁱ-weighted value telescopes
-                        up to 2²⁶⁰, discharged by `omega` (no kernel-capacity
-                        blowup — coefficients stay ≤ 2²⁶⁰);
-  • `sub_step_arith`, `csel_step`, the bit↔arith lemmas.
-
-`sub_val_spec` assembles them: unfold `sub`, run `sub_loop`, read
-`borrow >>> 63` into a `Choice`, run `conditional_add_l`, split on the
-underflow bit β5. The value identity in `ZMod ℓ`,
-  ⟦sub a b⟧ = ⟦a⟧ − ⟦b⟧      (canonical inputs, scVal b < ℓ),
-is complete on paper: β5 = 0 gives ⟦d⟧ + ⟦b⟧ = ⟦a⟧ directly; β5 = 1 gives
-the borrow-wrap 2²⁶⁰ and the +ℓ, which cancel in `ZMod ℓ` once the top
-carry γ5 = 1 (forced by scVal b < ℓ). The remaining step is purely the
-Aeneas binding-arity for destructuring `sub_loop_spec`'s pair-valued,
-multi-existential postcondition inside the outer `do`-block — a mechanical,
-not a mathematical or trust gap. Tracked in the control-repo MANIFEST
-scalar `open_frontier`; this file ships only kernel-checked content
-(Invariants H1/H4). -/
+/-- **Scalar subtraction is correct mod ℓ.** For limb-bounded inputs with
+    canonical subtrahend (scVal b < ℓ), the transpiled `Scalar52::sub`
+    denotes ⟦a⟧ − ⟦b⟧ in `ZMod ℓ`. Assembly of `sub_loop_spec` (borrow
+    chain) and `cond_add_l_{zero,one}_spec` (conditional +ℓ) through the
+    two telescopes; the bind is applied manually via `spec_bind` to keep
+    full control of the postcondition destructuring. -/
+theorem sub_val_spec (a b : Sc)
+    (a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 : U64)
+    (ha : (↑a : List U64) = [a0, a1, a2, a3, a4])
+    (hb : (↑b : List U64) = [b0, b1, b2, b3, b4])
+    (hab : a0.val < 2^52 ∧ a1.val < 2^52 ∧ a2.val < 2^52 ∧ a3.val < 2^52 ∧ a4.val < 2^52)
+    (hbb : b0.val < 2^52 ∧ b1.val < 2^52 ∧ b2.val < 2^52 ∧ b3.val < 2^52 ∧ b4.val < 2^52)
+    (hcb : scVal b < Ell) :
+    backend.serial.u64.scalar.Scalar52.sub a b
+      ⦃ r => scDenote r = scDenote a - scDenote b ⦄ := by
+  obtain ⟨hA0, hA1, hA2, hA3, hA4⟩ := hab
+  obtain ⟨hB0, hB1, hB2, hB3, hB4⟩ := hbb
+  unfold backend.serial.u64.scalar.Scalar52.sub
+  step as ⟨sh, hsh⟩
+  step as ⟨mask, hmask⟩
+  have hmaskv : mask.val = 2^52 - 1 := by
+    simp [hmask, hsh, U64.size_def, U64.numBits]
+  -- bind the borrow loop manually
+  apply spec_bind (sub_loop_spec a b mask a0 a1 a2 a3 a4 b0 b1 b2 b3 b4 ha hb hmaskv
+      ⟨hA0, hA1, hA2, hA3, hA4, hB0, hB1, hB2, hB3, hB4⟩)
+  rintro ⟨dw, w⟩ ⟨d0, d1, d2, d3, d4, β1, β2, β3, β4, β5, hdl,
+    hβ1, hβ2, hβ3, hβ4, hβ5, hd0, hd1, hd2, hd3, hd4,
+    he0, he1, he2, he3, he4, hbor⟩
+  simp only at hdl hbor
+  show (do
+    let i1 ← w >>> 63#i32
+    let i2 ← lift (UScalar.cast UScalarTy.U8 i1)
+    let c ← subtle.Choice.Insts.CoreConvertFromU8.from i2
+    let (_, difference1) ← dw.conditional_add_l c
+    ok difference1) ⦃ r => scDenote r = scDenote a - scDenote b ⦄
+  -- borrow >>> 63, cast, Choice
+  step as ⟨i1, hi1⟩
+  have hi1v : i1.val = β5 := by rw [hi1]; exact hbor
+  step as ⟨i2, hi2⟩
+  -- Choice.from is the identity model; inline c := i2
+  simp only [subtle.Choice.Insts.CoreConvertFromU8.from, bind_tc_ok]
+  set cc := i2 with hccdef
+  have hccv : cc.val = β5 := by
+    have hb5 : β5 < 2^8 := by omega
+    rw [hi2, UScalar.cast_val_eq, hi1v]
+    simp only [UScalarTy.U8, UScalarTy.numBits]
+    omega
+  have hdb : d0.val < 2^52 ∧ d1.val < 2^52 ∧ d2.val < 2^52 ∧ d3.val < 2^52 ∧ d4.val < 2^52 :=
+    ⟨hd0, hd1, hd2, hd3, hd4⟩
+  have hTsub : scLimbs d0 d1 d2 d3 d4 + scLimbs b0 b1 b2 b3 b4
+      = scLimbs a0 a1 a2 a3 a4 + 2^260 * β5 := by
+    unfold scLimbs
+    exact sub_telescope _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ he0 he1 he2 he3 he4
+  have hsva : scVal a = scLimbs a0 a1 a2 a3 a4 := scVal_eq a a0 a1 a2 a3 a4 ha
+  have hsvb : scVal b = scLimbs b0 b1 b2 b3 b4 := scVal_eq b b0 b1 b2 b3 b4 hb
+  rcases (Nat.le_one_iff_eq_zero_or_eq_one.mp hβ5) with hβz | hβo
+  · -- β5 = 0: no underflow, cond-add is identity on values
+    have hc0 : cc.val = 0 := by rw [hccv, hβz]
+    apply spec_bind (cond_add_l_zero_spec dw cc d0 d1 d2 d3 d4 hdl hc0 hdb)
+    rintro ⟨cw1, cw2⟩ ⟨r0, r1, r2, r3, r4, hrl, hr0, hr1, hr2, hr3, hr4⟩
+    simp only at hrl
+    show scDenote cw2 = scDenote a - scDenote b
+    have hcwval : scVal cw2 = scLimbs d0 d1 d2 d3 d4 := by
+      rw [scVal_eq cw2 r0 r1 r2 r3 r4 hrl]; unfold scLimbs; rw [hr0, hr1, hr2, hr3, hr4]
+    have key : scVal cw2 + scVal b = scVal a := by
+      rw [hcwval, hsva, hsvb]; rw [hβz] at hTsub; simpa using hTsub
+    have hc := congrArg (Nat.cast (R := ZMod Ell)) key
+    push_cast at hc
+    simp only [scDenote]; rw [eq_sub_iff_add_eq]; exact hc
+  · -- β5 = 1: underflow; +ℓ, and the 2^260 wrap cancels in ZMod ℓ
+    have hc1 : cc.val = 1 := by rw [hccv, hβo]
+    apply spec_bind (cond_add_l_one_spec dw cc d0 d1 d2 d3 d4 hdl hc1 hdb)
+    rintro ⟨cw1, cw2⟩ ⟨r0, r1, r2, r3, r4, γ1, γ2, γ3, γ4, γ5, hrl,
+      hgb1, hgb2, hgb3, hgb4, hgb5, hrb0, hrb1, hrb2, hrb3, hrb4,
+      hf0, hf1, hf2, hf3, hf4⟩
+    simp only at hrl
+    show scDenote cw2 = scDenote a - scDenote b
+    have hLsum : (671914833335277 + 2^52*3916664325105025 + 2^104*1367801
+        + 2^156*0 + 2^208*17592186044416 : ℕ) = Ell := by unfold Ell; norm_num
+    have hTadd : scLimbs r0 r1 r2 r3 r4 + 2^260 * γ5 = scLimbs d0 d1 d2 d3 d4 + Ell := by
+      have h := add_telescope r0.val r1.val r2.val r3.val r4.val
+        d0.val d1.val d2.val d3.val d4.val
+        671914833335277 3916664325105025 1367801 0 17592186044416
+        γ1 γ2 γ3 γ4 γ5 hf0 hf1 hf2 hf3 hf4
+      unfold scLimbs; rw [← hLsum]; linear_combination h
+    have hblt : scLimbs b0 b1 b2 b3 b4 < Ell := by rw [← hsvb]; exact hcb
+    -- γ5 = 1, derived with scLimbs kept as opaque atoms (no 2^52i unfold →
+    -- omega stays cheap: 4 atoms + one 2^260 literal + Ell as an atom)
+    have hrlt : scLimbs r0 r1 r2 r3 r4 < 2^260 := by unfold scLimbs; omega
+    have hd_eq : scLimbs d0 d1 d2 d3 d4 + scLimbs b0 b1 b2 b3 b4
+        = scLimbs a0 a1 a2 a3 a4 + 2^260 := by rw [hβo] at hTsub; simpa using hTsub
+    have hγ5 : γ5 = 1 := by
+      -- atoms: R,D,B,A := scLimbs …, Ell; facts below force γ5 = 1
+      have hRnn : 0 ≤ scLimbs a0 a1 a2 a3 a4 := Nat.zero_le _
+      omega
+    have hc := congrArg (Nat.cast (R := ZMod Ell)) hTadd
+    have hc2 := congrArg (Nat.cast (R := ZMod Ell)) hTsub
+    have hEz : (Ell : ZMod Ell) = 0 := ZMod.natCast_self Ell
+    simp only [scDenote, scVal_eq cw2 r0 r1 r2 r3 r4 hrl, hsva, hsvb, hβo, hγ5]
+    rw [hγ5] at hc
+    rw [hβo] at hc2
+    push_cast at hc hc2 ⊢
+    rw [hEz] at hc
+    linear_combination hc + hc2
 
 end ScalarProofs

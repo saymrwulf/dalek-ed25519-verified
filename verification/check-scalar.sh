@@ -19,7 +19,7 @@ lake env bash -c "
   cd '$HERE/gen' && export LEAN_PATH=\"\$LEAN_PATH:\$PWD:$HERE\"
   for m in ${GEN[*]}; do echo \"  · gen \$m\"; LEAN_TIMEOUT=300 LEAN_MEM_MB=6144 '$HERE/lean-guard' \"\$m.lean\" || exit 1; done
   cd '$HERE'
-  for m in ${PROOFS[*]}; do echo \"  · proof \$m\"; LEAN_TIMEOUT=300 LEAN_MEM_MB=6144 '$HERE/lean-guard' \"Proofs/\$m.lean\" || exit 1; done
+  for m in ${PROOFS[*]}; do echo \"  · proof \$m\"; LEAN_TIMEOUT=600 LEAN_MEM_MB=8192 '$HERE/lean-guard' \"Proofs/\$m.lean\" || exit 1; done
 " || { echo FAIL; exit 1; }
 echo "=== Phase 3: axiom audit (kernel-level) ==="
 cd "$AENEAS_LEAN"
@@ -30,12 +30,12 @@ lake env bash -c "
   AUD=\$(mktemp '$HERE/.audit-scalar-XXXX.lean')
   { echo 'import Proofs.ScalarDenote'; echo 'import Proofs.ScalarSubSpec'; echo '#print axioms ScalarProofs.L_val'
     echo '#print axioms ScalarProofs.sub_loop_spec'
-    echo '#print axioms ScalarProofs.cond_add_l_one_spec'; } > \"\$AUD\"
+    echo '#print axioms ScalarProofs.cond_add_l_one_spec'; echo '#print axioms ScalarProofs.sub_val_spec'; } > \"\$AUD\"
   OUT=\$(LEAN_TIMEOUT=120 LEAN_MEM_MB=4096 '$HERE/lean-guard' \"\$AUD\" 2>&1)
   echo \"\$OUT\"
   rm -f \"\$AUD\" \"\${AUD%.lean}.olean\"
   N=\$(echo \"\$OUT\" | grep -cF \"depends on axioms: [propext, Classical.choice, Quot.sound]\" || true)
-  [ \"\$N\" -eq 3 ] || { echo \"AXIOM AUDIT FAILED: \$N/3 clean\"; exit 1; }
+  [ \"\$N\" -eq 4 ] || { echo \"AXIOM AUDIT FAILED: \$N/4 clean\"; exit 1; }
 " || { echo FAIL; exit 1; }
 echo "  L_val axiom-clean"
 
