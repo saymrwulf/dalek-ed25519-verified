@@ -27,7 +27,7 @@ in this repository.
 |-------|-------------|--------|-----------------------|
 | Field 𝔽_p          | `fieldImplementation`    | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
 | Group law (Edwards) | `edwardsImplementation`  | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
-| Scalar mod ℓ        | `add_val_spec` ✅ `sub_val_spec` ✅ (`scalarImplementation` aggregate planned) | 🔨 add+sub done · mul next | ⟦add a b⟧=⟦a⟧+⟦b⟧ and ⟦sub a b⟧=⟦a⟧−⟦b⟧ in ZMod ℓ proven on dalek; ×3 port & Montgomery mul next |
+| Scalar mod ℓ        | `scalarImplementation` (add ✅ sub ✅ mul ✅) | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
 | Signature (EdDSA)   | `verifyEquation` (planned)          | ⏳ planned | — |
 
 Status legend: ✅ proven & axiom-audited · ⏳ in progress · ❌ not started.
@@ -62,7 +62,9 @@ The scalar layer has its own pair of buttons:
 
 ```bash
 ./extract-scalar.sh   # regenerates gen/CurveScalar (Scalar52 limb arithmetic)
-./check-scalar.sh     # compiles the scalar gen + the proven scalar foundation
+./check-scalar.sh     # compiles the scalar gen + all scalar proofs (add, sub,
+                      # Montgomery mul) and kernel-audits 10 certificates,
+                      # including the scalarImplementation aggregate
 ```
 
 
