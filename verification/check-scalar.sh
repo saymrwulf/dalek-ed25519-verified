@@ -19,7 +19,7 @@ lake env bash -c "
   cd '$HERE/gen' && export LEAN_PATH=\"\$LEAN_PATH:\$PWD:$HERE\"
   for m in ${GEN[*]}; do echo \"  · gen \$m\"; LEAN_TIMEOUT=300 LEAN_MEM_MB=6144 '$HERE/lean-guard' \"\$m.lean\" || exit 1; done
   cd '$HERE'
-  for m in ${PROOFS[*]}; do echo \"  · proof \$m\"; LEAN_TIMEOUT=600 LEAN_MEM_MB=8192 '$HERE/lean-guard' \"Proofs/\$m.lean\" || exit 1; done
+  for m in ${PROOFS[*]}; do echo \"  · proof \$m\"; LEAN_TIMEOUT=300 LEAN_MEM_MB=4096 '$HERE/lean-guard' \"Proofs/\$m.lean\" || exit 1; done
 " || { echo FAIL; exit 1; }
 echo "=== Phase 3: axiom audit (kernel-level) ==="
 cd "$AENEAS_LEAN"
