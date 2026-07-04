@@ -25,6 +25,10 @@ CRATE=~/GitClone/FormalVerification/sources/curve25519-dalek-source/curve25519-d
 
 echo "[1/2] charon: Rust -> LLBC (field + curve_models + edwards + scalar [MERGED GEN])"
 cd "$CRATE"
+# Force the portable SERIAL backend (the one we verify): the SIMD dispatch
+# arm is `#[cfg(curve25519_dalek_backend = "simd")]`, so pinning the cfg to
+# "serial" removes it from the extraction — no vector-backend axiom leaks in.
+export RUSTFLAGS='--cfg curve25519_dalek_backend="serial"'
 charon cargo --preset=aeneas \
   --start-from crate::field \
   --start-from crate::backend::serial::u64::field \

@@ -29,6 +29,10 @@ GEN_MODULES=(
   CurveField/Types
   CurveField/FunsExternal
   CurveField/Funs
+  CurveSig/TypesExternal
+  CurveSig/Types
+  CurveSig/FunsExternal
+  CurveSig/Funs
 )
 PROOFS=(
   Basic
@@ -60,6 +64,7 @@ PROOFS=(
   DsmNafLoopSpec
   DsmNafSpec
   DsmMulSpec
+  SigApexSpec
 )
 # Fully-qualified certificate names; each must be axiom-clean.
 CERTS=(
@@ -78,6 +83,7 @@ CERTS=(
   CurveFieldProofs.non_adjacent_form_spec
   CurveFieldProofs.run_basepoint
   CurveFieldProofs.vartime_double_base_mul_spec
+  CurveFieldProofs.verify_loop_full
 )
 # Imports needed so every certificate in CERTS is in scope for the audit.
 AUDIT_IMPORTS=(
@@ -90,6 +96,7 @@ AUDIT_IMPORTS=(
   Proofs.DsmNafMath
   Proofs.DsmNafSpec
   Proofs.DsmMulSpec
+  Proofs.SigApexSpec
 )
 
 # ── Phase 0: resource + integrity guards ────────────────────────────────────
@@ -169,5 +176,30 @@ lake env bash -c "
     exit 1
   fi
 "
+echo ""
+echo "=== Phase 3b: signature-apex audit (SHA-512 + wire-format boundary) ==="
+# The verification-equation apex is grounded in the PROVEN curve model; its
+# only axioms beyond the standard three are the deliberate, documented
+# boundary: the SHA-512 hash oracle and the opaque wire-format types.
+# NO curve axioms, NO scalar axioms, NO backend-dispatch axioms.
+cd "$AENEAS_LEAN"
+lake env bash -c "
+  set -euo pipefail
+  cd '$HERE/gen' && export LEAN_PATH=\"\$LEAN_PATH:\$PWD:$HERE\"
+  cd '$HERE'
+  ALLOWED='[propext, Classical.choice, Quot.sound, ed25519.Signature, sha2.Sha512, verifying.sha512_finalize_bytes, verifying.sha512_new, verifying.sha512_update, ed25519.Signature.to_bytes, signature.error.Error, signature.error.Error.new]'
+  AUD=\$(mktemp '$HERE/.apex-XXXX.lean')
+  { echo 'import Proofs.SigApexSpec'; echo '#print axioms CurveFieldProofs.verify_accepts_iff'; } > \"\$AUD\"
+  OUT=\$(LEAN_TIMEOUT=$TIMEOUT LEAN_MEM_MB=4096 '$HERE/lean-guard' \"\$AUD\" 2>&1)
+  echo \"\$OUT\"
+  rm -f \"\$AUD\"
+  FLAT=\$(echo \"\$OUT\" | tr '\\n' ' ' | tr -s ' ')
+  if echo \"\$FLAT\" | grep -qF \"depends on axioms: \$ALLOWED\"; then
+    echo '  apex axiom cone = exactly the SHA-512 + wire-format boundary (no curve/scalar/backend axioms)'
+  else
+    echo 'APEX AUDIT FAILED: verify_accepts_iff cone is not the documented boundary'; exit 1
+  fi
+"
+
 echo ""
 echo "ALL PROOFS PASS. ALL CERTIFICATES AXIOM-CLEAN. NO DEAD FILES."

@@ -3747,12 +3747,8 @@ def backend.variable_base_mul
   (point : edwards.EdwardsPoint) (scalar : scalar.Scalar) :
   Result edwards.EdwardsPoint
   := do
-  let bk ← backend.get_selected_backend
-  match bk with
-  | backend.BackendKind.Avx2 =>
-    backend.vector.scalar_mul.variable_base.spec_avx2.mul point scalar
-  | backend.BackendKind.Serial =>
-    backend.serial.scalar_mul.variable_base.mul point scalar
+  let _ ← backend.get_selected_backend
+  backend.serial.scalar_mul.variable_base.mul point scalar
 
 /-- [curve25519_dalek::backend::vartime_double_base_mul]:
     Source: 'curve25519-dalek/src/backend.rs', lines 267:0-277:1
@@ -3761,12 +3757,8 @@ def backend.vartime_double_base_mul
   (a : scalar.Scalar) (A : edwards.EdwardsPoint) (b : scalar.Scalar) :
   Result edwards.EdwardsPoint
   := do
-  let bk ← backend.get_selected_backend
-  match bk with
-  | backend.BackendKind.Avx2 =>
-    backend.vector.scalar_mul.vartime_double_base.spec_avx2.mul a A b
-  | backend.BackendKind.Serial =>
-    backend.serial.scalar_mul.vartime_double_base.mul a A b
+  let _ ← backend.get_selected_backend
+  backend.serial.scalar_mul.vartime_double_base.mul a A b
 
 /-- [curve25519_dalek::constants::BASEPOINT_ORDER]
     Source: 'curve25519-dalek/src/constants.rs', lines 72:0-78:2 -/

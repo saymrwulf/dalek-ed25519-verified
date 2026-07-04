@@ -286,20 +286,6 @@ axiom
 axiom backend.serial.scalar_mul.variable_base.mul
   : edwards.EdwardsPoint → scalar.Scalar → Result edwards.EdwardsPoint
 
-/-- [curve25519_dalek::backend::vector::scalar_mul::variable_base::spec_avx2::mul]:
-    Source: 'curve25519-dalek/src/backend/vector/scalar_mul/variable_base.rs', lines 3:0-6:2
-    Visibility: public -/
-axiom backend.vector.scalar_mul.variable_base.spec_avx2.mul
-  : edwards.EdwardsPoint → scalar.Scalar → Result edwards.EdwardsPoint
-
-/-- [curve25519_dalek::backend::vector::scalar_mul::vartime_double_base::spec_avx2::mul]:
-    Source: 'curve25519-dalek/src/backend/vector/scalar_mul/vartime_double_base.rs', lines 14:0-17:2
-    Visibility: public -/
-axiom backend.vector.scalar_mul.vartime_double_base.spec_avx2.mul
-  :
-  scalar.Scalar → edwards.EdwardsPoint → scalar.Scalar → Result
-    edwards.EdwardsPoint
-
 /-- [curve25519_dalek::backend::get_selected_backend]:
     Source: 'curve25519-dalek/src/backend.rs', lines 55:0-75:1 -/
 axiom backend.get_selected_backend : Result backend.BackendKind

@@ -183,7 +183,10 @@ def core.ops.range.RangeFull.Insts.CoreSliceIndexSliceIndexSliceSlice.get
     Name pattern: [subtle::{subtle::Choice}::unwrap_u8]
     Visibility: public -/
 @[rust_fun "subtle::{subtle::Choice}::unwrap_u8"]
-axiom subtle.Choice.unwrap_u8 : subtle.Choice → Result Std.U8
+def subtle.Choice.unwrap_u8 (c : subtle.Choice) : Result Std.U8 :=
+  -- MODEL (faithful): `Choice` is the u8 wrapper (`subtle.Choice := Std.U8`,
+  -- TypesExternal); `unwrap_u8` is upstream's `self.0`.
+  ok c
 
 /-- [subtle::{impl core::convert::From<subtle::Choice> for bool}::from]:
     Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs', lines 153:4-153:35
@@ -355,8 +358,14 @@ axiom backend.vector.scalar_mul.vartime_double_base.spec_avx2.mul
     edwards.EdwardsPoint
 
 /-- [curve25519_dalek::backend::get_selected_backend]:
-    Source: 'curve25519-dalek/src/backend.rs', lines 55:0-75:1 -/
-axiom backend.get_selected_backend : Result backend.BackendKind
+    Source: 'curve25519-dalek/src/backend.rs', lines 55:0-75:1
+
+    REAL DEFINITION (not an axiom): under the verified build configuration
+    (`curve25519_dalek_backend = "serial"`) the only backend is `Serial`, so
+    the runtime selector returns it unconditionally. Faithful to the extracted
+    config; keeps the verifier's axiom cone free of backend-dispatch axioms. -/
+def backend.get_selected_backend : Result backend.BackendKind :=
+  ok backend.BackendKind.Serial
 
 /-- [curve25519_dalek::edwards::affine::{impl subtle::ConditionallySelectable for curve25519_dalek::edwards::affine::AffinePoint}::conditional_swap]:
     Source: 'curve25519-dalek/src/edwards/affine.rs', lines 23:0-30:1

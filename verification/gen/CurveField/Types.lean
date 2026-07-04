@@ -190,7 +190,6 @@ def backend.serial.u64.scalar.Scalar52 := Array Std.U64 5#usize
     Source: 'curve25519-dalek/src/backend.rs', lines 46:0-52:1 -/
 @[discriminant isize]
 inductive backend.BackendKind where
-| Avx2 : backend.BackendKind
 | Serial : backend.BackendKind
 
 /-- [curve25519_dalek::edwards::affine::AffinePoint]
