@@ -175,6 +175,11 @@ structure edwards.EdwardsPoint where
 structure scalar.Scalar where
   bytes : Array Std.U8 32#usize
 
+/-- [curve25519_dalek::window::NafLookupTable5]
+    Source: 'curve25519-dalek/src/window.rs', lines 183:0-183:56 -/
+@[reducible]
+def window.NafLookupTable5 (T : Type) := Array T 8#usize
+
 /-- [curve25519_dalek::backend::BackendKind]
     Source: 'curve25519-dalek/src/backend.rs', lines 46:0-52:1 -/
 @[discriminant isize]
