@@ -180,6 +180,12 @@ structure scalar.Scalar where
 @[reducible]
 def window.NafLookupTable5 (T : Type) := Array T 8#usize
 
+/-- [curve25519_dalek::backend::serial::u64::scalar::Scalar52]
+    Source: 'curve25519-dalek/src/backend/serial/u64/scalar.rs', lines 26:0-26:34
+    Visibility: public -/
+@[reducible]
+def backend.serial.u64.scalar.Scalar52 := Array Std.U64 5#usize
+
 /-- [curve25519_dalek::backend::BackendKind]
     Source: 'curve25519-dalek/src/backend.rs', lines 46:0-52:1 -/
 @[discriminant isize]
