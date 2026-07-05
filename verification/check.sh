@@ -71,6 +71,7 @@ PROOFS=(
   SigApexSpec
   PointLiftSpec
   PointEqSpec
+  DecompressSpec
 )
 # Fully-qualified certificate names; each must be axiom-clean.
 CERTS=(
@@ -95,6 +96,8 @@ CERTS=(
   ScalarProofs.from_bytes_mod_order_wide_spec
   CurveFieldProofs.vartime_dsm_basepoint_spec
   CurveFieldProofs.enc_point_inj
+  CurveFieldProofs.pow_p58_spec
+  CurveFieldProofs.fe_ct_eq_spec
 )
 # Imports needed so every certificate in CERTS is in scope for the audit.
 AUDIT_IMPORTS=(
@@ -113,6 +116,7 @@ AUDIT_IMPORTS=(
   Proofs.SigApexSpec
   Proofs.PointLiftSpec
   Proofs.PointEqSpec
+  Proofs.DecompressSpec
 )
 
 # ── Phase 0: resource + integrity guards ────────────────────────────────────
