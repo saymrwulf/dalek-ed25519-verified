@@ -66,6 +66,7 @@ PROOFS=(
   DsmMulSpec
   ToBytesMath
   ToBytesSpec
+  CompressSpec
   SigApexSpec
 )
 # Fully-qualified certificate names; each must be axiom-clean.
@@ -87,6 +88,7 @@ CERTS=(
   CurveFieldProofs.vartime_double_base_mul_spec
   CurveFieldProofs.verify_loop_full
   CurveFieldProofs.to_bytes_spec
+  CurveFieldProofs.ed_compress_spec
 )
 # Imports needed so every certificate in CERTS is in scope for the audit.
 AUDIT_IMPORTS=(
@@ -100,6 +102,7 @@ AUDIT_IMPORTS=(
   Proofs.DsmNafSpec
   Proofs.DsmMulSpec
   Proofs.ToBytesSpec
+  Proofs.CompressSpec
   Proofs.SigApexSpec
 )
 

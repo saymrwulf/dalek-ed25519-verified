@@ -262,4 +262,20 @@ theorem bytes_pack (f0 f1 f2 f3 f4 : ℕ)
   zify at s0 s1 s2 s3 s4 ⊢
   linear_combination s0 + 2^51 * s1 + 2^102 * s2 + 2^153 * s3 + 2^204 * s4
 
+/-- Setting a clear top bit by XOR is addition (compress's sign-bit write). -/
+theorem xor_top_bit (a : ℕ) (h : a < 2^7) : a ^^^ 2^7 = a + 2^7 := by
+  have hdiv : (a ^^^ 2^7) / 2^7 = 1 := by
+    rw [Nat.xor_div_two_pow]
+    rw [Nat.div_eq_of_lt h]
+    norm_num
+  have hand := Nat.and_two_pow_sub_one_eq_mod (a ^^^ 2^7) 7
+  have hdistrib := Nat.and_xor_distrib_right (a := a) (b := 2^7) (c := 2^7 - 1)
+  have ha : a &&& (2^7 - 1) = a := by
+    rw [Nat.and_two_pow_sub_one_eq_mod, Nat.mod_eq_of_lt h]
+  have h2 : 2^7 &&& (2^7 - 1) = 0 := by decide
+  have hmod : (a ^^^ 2^7) % 2^7 = a := by
+    rw [← hand, hdistrib, ha, h2, Nat.xor_zero]
+  have hdm := Nat.div_add_mod (a ^^^ 2^7) (2^7)
+  omega
+
 end CurveFieldProofs
