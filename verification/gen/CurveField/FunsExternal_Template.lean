@@ -315,30 +315,13 @@ axiom edwards.affine.AffinePoint.Insts.CoreCmpEq.assert_fields_are_eq
   : edwards.affine.AffinePoint → Result Unit
 
 /-- [curve25519_dalek::edwards::{impl core::cmp::Eq for curve25519_dalek::edwards::CompressedEdwardsY}::assert_fields_are_eq]:
-    Source: 'curve25519-dalek/src/edwards.rs', lines 183:0-183:33
+    Source: 'curve25519-dalek/src/edwards.rs', lines 182:0-182:33
     Visibility: public -/
 axiom edwards.CompressedEdwardsY.Insts.CoreCmpEq.assert_fields_are_eq
   : edwards.CompressedEdwardsY → Result Unit
 
-/-- [curve25519_dalek::edwards::decompress::step_2]:
-    Source: 'curve25519-dalek/src/edwards.rs', lines 240:4-257:5 -/
-axiom edwards.decompress.step_2
-  :
-  edwards.CompressedEdwardsY → backend.serial.u64.field.FieldElement51 →
-    backend.serial.u64.field.FieldElement51 →
-    backend.serial.u64.field.FieldElement51 → Result edwards.EdwardsPoint
-
-/-- [curve25519_dalek::edwards::decompress::step_1]:
-    Source: 'curve25519-dalek/src/edwards.rs', lines 226:4-237:5 -/
-axiom edwards.decompress.step_1
-  :
-  edwards.CompressedEdwardsY → Result (subtle.Choice ×
-    backend.serial.u64.field.FieldElement51 ×
-    backend.serial.u64.field.FieldElement51 ×
-    backend.serial.u64.field.FieldElement51)
-
 /-- [curve25519_dalek::edwards::{curve25519_dalek::edwards::CompressedEdwardsY}::from_slice]:
-    Source: 'curve25519-dalek/src/edwards.rs', lines 423:4-425:5
+    Source: 'curve25519-dalek/src/edwards.rs', lines 428:4-430:5
     Visibility: public -/
 axiom edwards.CompressedEdwardsY.from_slice
   :
@@ -346,7 +329,7 @@ axiom edwards.CompressedEdwardsY.from_slice
     core.array.TryFromSliceError)
 
 /-- [curve25519_dalek::edwards::{impl subtle::ConditionallySelectable for curve25519_dalek::edwards::EdwardsPoint}::conditional_swap]:
-    Source: 'curve25519-dalek/src/edwards.rs', lines 486:0-495:1
+    Source: 'curve25519-dalek/src/edwards.rs', lines 491:0-500:1
     Visibility: public -/
 axiom edwards.EdwardsPoint.Insts.SubtleConditionallySelectable.conditional_swap
   :
@@ -354,7 +337,7 @@ axiom edwards.EdwardsPoint.Insts.SubtleConditionallySelectable.conditional_swap
     (edwards.EdwardsPoint × edwards.EdwardsPoint)
 
 /-- [curve25519_dalek::edwards::{impl subtle::ConditionallySelectable for curve25519_dalek::edwards::EdwardsPoint}::conditional_assign]:
-    Source: 'curve25519-dalek/src/edwards.rs', lines 486:0-495:1
+    Source: 'curve25519-dalek/src/edwards.rs', lines 491:0-500:1
     Visibility: public -/
 axiom
   edwards.EdwardsPoint.Insts.SubtleConditionallySelectable.conditional_assign
@@ -363,7 +346,7 @@ axiom
     edwards.EdwardsPoint
 
 /-- [curve25519_dalek::edwards::{impl core::cmp::Eq for curve25519_dalek::edwards::EdwardsPoint}::assert_fields_are_eq]:
-    Source: 'curve25519-dalek/src/edwards.rs', lines 520:0-520:27
+    Source: 'curve25519-dalek/src/edwards.rs', lines 525:0-525:27
     Visibility: public -/
 axiom edwards.EdwardsPoint.Insts.CoreCmpEq.assert_fields_are_eq
   : edwards.EdwardsPoint → Result Unit
@@ -378,7 +361,7 @@ axiom field.FieldElement51.internal_invert_batch
     backend.serial.u64.field.FieldElement51))
 
 /-- [curve25519_dalek::edwards::{impl core::iter::traits::accum::Sum<T> for curve25519_dalek::edwards::EdwardsPoint}::sum]:
-    Source: 'curve25519-dalek/src/edwards.rs', lines 841:4-846:5
+    Source: 'curve25519-dalek/src/edwards.rs', lines 846:4-851:5
     Visibility: public -/
 axiom edwards.EdwardsPoint.Insts.CoreIterTraitsAccumSum.sum
   {T : Type} {I : Type} (coreborrowBorrowTEdwardsPointInst : core.borrow.Borrow

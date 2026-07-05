@@ -161,7 +161,7 @@ structure traits.ValidityCheck (Self : Type) where
   is_valid : Self → Result Bool
 
 /-- [curve25519_dalek::edwards::EdwardsPoint]
-    Source: 'curve25519-dalek/src/edwards.rs', lines 390:0-395:1
+    Source: 'curve25519-dalek/src/edwards.rs', lines 395:0-400:1
     Visibility: public -/
 structure edwards.EdwardsPoint where
   X : backend.serial.u64.field.FieldElement51
@@ -200,7 +200,7 @@ structure edwards.affine.AffinePoint where
   y : backend.serial.u64.field.FieldElement51
 
 /-- [curve25519_dalek::edwards::CompressedEdwardsY]
-    Source: 'curve25519-dalek/src/edwards.rs', lines 175:0-175:44
+    Source: 'curve25519-dalek/src/edwards.rs', lines 174:0-174:44
     Visibility: public -/
 @[reducible]
 def edwards.CompressedEdwardsY := Array Std.U8 32#usize
@@ -212,13 +212,13 @@ def edwards.CompressedEdwardsY := Array Std.U8 32#usize
 def montgomery.MontgomeryPoint := Array Std.U8 32#usize
 
 /-- [curve25519_dalek::edwards::{curve25519_dalek::edwards::EdwardsPoint}::compress_batch::closure#1]
-    Source: 'curve25519-dalek/src/edwards.rs', lines 625:29-629:9 -/
+    Source: 'curve25519-dalek/src/edwards.rs', lines 630:29-634:9 -/
 def edwards.EdwardsPoint.compress_batch.closure_1 (N : Std.Usize) :=
   Array edwards.EdwardsPoint N × Array backend.serial.u64.field.FieldElement51
   N
 
 /-- [curve25519_dalek::edwards::{curve25519_dalek::edwards::EdwardsPoint}::compress_batch::closure]
-    Source: 'curve25519-dalek/src/edwards.rs', lines 622:50-622:65 -/
+    Source: 'curve25519-dalek/src/edwards.rs', lines 627:50-627:65 -/
 @[reducible]
 def edwards.EdwardsPoint.compress_batch.closure (N : Std.Usize) :=
   Array edwards.EdwardsPoint N

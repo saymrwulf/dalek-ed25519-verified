@@ -54,7 +54,6 @@ charon cargo --preset=aeneas \
   --opaque 'crate::backend::serial::scalar_mul::pippenger' \
   --opaque 'crate::backend::vector' \
   --opaque 'crate::backend::get_selected_backend' \
-  --opaque 'crate::edwards::decompress' \
   --opaque 'crate::edwards::_::sum' \
   --opaque 'crate::edwards::_::from_slice' \
   --dest-file "$HERE/CurveField.llbc" \
