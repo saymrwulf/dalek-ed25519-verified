@@ -115,7 +115,7 @@ theorem carry_pack (x m1 m2 m3 m4 : ℕ) :
 /-! ### Byte-chunk splits: one per limb, offsets follow 51·j mod 8. -/
 
 /-- Limb 0 (bit offset 0): bytes 0–5 whole, low 3 bits of byte 6. -/
-theorem byte_split_0 (f : ℕ) (hf : f < 2^51) :
+theorem byte_split_0 (f : ℕ) :
     f % 2^8 + (f / 2^8 % 2^8) * 2^8 + (f / 2^16 % 2^8) * 2^16
       + (f / 2^24 % 2^8) * 2^24 + (f / 2^32 % 2^8) * 2^32
       + (f / 2^40 % 2^8) * 2^40 + (f / 2^48) * 2^48 = f := by
@@ -134,7 +134,7 @@ theorem byte_split_0 (f : ℕ) (hf : f < 2^51) :
 
 /-- Limb 1 (bit offset 3): low 5 bits close byte 6, bytes 7–11 whole,
     low 6 bits of byte 12 take the top (f < 2⁵¹ ⇒ f/2⁴⁵ < 2⁶). -/
-theorem byte_split_1 (f : ℕ) (hf : f < 2^51) :
+theorem byte_split_1 (f : ℕ) :
     f % 2^5 + (f / 2^5 % 2^8) * 2^5 + (f / 2^13 % 2^8) * 2^13
       + (f / 2^21 % 2^8) * 2^21 + (f / 2^29 % 2^8) * 2^29
       + (f / 2^37 % 2^8) * 2^37 + (f / 2^45) * 2^45 = f := by
@@ -153,7 +153,7 @@ theorem byte_split_1 (f : ℕ) (hf : f < 2^51) :
 
 /-- Limb 2 (bit offset 6): low 2 bits close byte 12, bytes 13–18 whole,
     the single top bit lands in byte 19 (f/2⁵⁰ < 2). -/
-theorem byte_split_2 (f : ℕ) (hf : f < 2^51) :
+theorem byte_split_2 (f : ℕ) :
     f % 2^2 + (f / 2^2 % 2^8) * 2^2 + (f / 2^10 % 2^8) * 2^10
       + (f / 2^18 % 2^8) * 2^18 + (f / 2^26 % 2^8) * 2^26
       + (f / 2^34 % 2^8) * 2^34 + (f / 2^42 % 2^8) * 2^42
@@ -175,7 +175,7 @@ theorem byte_split_2 (f : ℕ) (hf : f < 2^51) :
 
 /-- Limb 3 (bit offset 1): low 7 bits close byte 19, bytes 20–24 whole,
     low 4 bits of byte 25 take the top (f/2⁴⁷ < 2⁴). -/
-theorem byte_split_3 (f : ℕ) (hf : f < 2^51) :
+theorem byte_split_3 (f : ℕ) :
     f % 2^7 + (f / 2^7 % 2^8) * 2^7 + (f / 2^15 % 2^8) * 2^15
       + (f / 2^23 % 2^8) * 2^23 + (f / 2^31 % 2^8) * 2^31
       + (f / 2^39 % 2^8) * 2^39 + (f / 2^47) * 2^47 = f := by
@@ -194,7 +194,7 @@ theorem byte_split_3 (f : ℕ) (hf : f < 2^51) :
 
 /-- Limb 4 (bit offset 4): high 4 bits of byte 25 take the low 4 bits,
     bytes 26–31 whole (f/2⁴⁴ < 2⁷ — the canonical top byte < 2⁷). -/
-theorem byte_split_4 (f : ℕ) (hf : f < 2^51) :
+theorem byte_split_4 (f : ℕ) :
     f % 2^4 + (f / 2^4 % 2^8) * 2^4 + (f / 2^12 % 2^8) * 2^12
       + (f / 2^20 % 2^8) * 2^20 + (f / 2^28 % 2^8) * 2^28
       + (f / 2^36 % 2^8) * 2^36 + (f / 2^44) * 2^44 = f := by
@@ -251,11 +251,11 @@ theorem bytes_pack (f0 f1 f2 f3 f4 : ℕ)
       + (f4 / 2^36 % 2^8) * 2^240
       + (f4 / 2^44) * 2^248
       = f0 + f1 * 2^51 + f2 * 2^102 + f3 * 2^153 + f4 * 2^204 := by
-  have s0 := byte_split_0 f0 h0
-  have s1 := byte_split_1 f1 h1
-  have s2 := byte_split_2 f2 h2
-  have s3 := byte_split_3 f3 h3
-  have s4 := byte_split_4 f4 h4
+  have s0 := byte_split_0 f0
+  have s1 := byte_split_1 f1
+  have s2 := byte_split_2 f2
+  have s3 := byte_split_3 f3
+  have s4 := byte_split_4 f4
   -- Each limb's split, scaled by its radix weight, accounts for exactly the
   -- terms above that mention it (boundary bytes contribute to two limbs).
   -- Cast to ℤ and take the weighted linear combination of the five splits.
