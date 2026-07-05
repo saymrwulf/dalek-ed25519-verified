@@ -171,4 +171,155 @@ theorem rangeEq_iff_bytesVal (e r : Std.Array Std.U8 32#usize) :
     -- j is one of 0..31: close each case with the matching byte equality
     interval_cases j <;> simp_all <;> exact UScalar.eq_of_val_eq (by assumption)
 
+/-- List-level 32-destructure (helper for the 64-byte device). -/
+theorem List.exists_len32 (l : List Std.U8) (h : l.length = 32) :
+    ∃ (d0 d1 d2 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 d13 d14 d15 d16 d17 d18 d19 d20 d21 d22 d23 d24 d25 d26 d27 d28 d29 d30 d31 : Std.U8), l = [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, d29, d30, d31] := by
+  match hl : l with
+  | [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, d29, d30, d31] => exact ⟨d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20, d21, d22, d23, d24, d25, d26, d27, d28, d29, d30, d31, rfl⟩
+  | [] | [_] | [_,_] | [_,_,_] | [_,_,_,_] | [_,_,_,_,_] | [_,_,_,_,_,_] | [_,_,_,_,_,_,_] => simp [hl] at h
+  | [_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] => simp [hl] at h
+  | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] => simp [hl] at h
+  | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] => simp [hl] at h
+  | _::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_::_ => simp [hl] at h
+
+/-- Destructuring device for 64-byte arrays (hash outputs): 32-cons prefix,
+    then the list-level device on the tail. -/
+theorem Bytes64.exists_bytes (s : Std.Array Std.U8 64#usize) :
+    ∃ (c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24 c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36 c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48 c49 c50 c51 c52 c53 c54 c55 c56 c57 c58 c59 c60 c61 c62 c63 : Std.U8),
+      (↑s : List Std.U8) = [c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20, c21, c22, c23, c24, c25, c26, c27, c28, c29, c30, c31, c32, c33, c34, c35, c36, c37, c38, c39, c40, c41, c42, c43, c44, c45, c46, c47, c48, c49, c50, c51, c52, c53, c54, c55, c56, c57, c58, c59, c60, c61, c62, c63] := by
+  have h : (↑s : List Std.U8).length = 64 := by
+    have := s.property
+    simp_all
+  match hl : (↑s : List Std.U8) with
+  | c0 :: c1 :: c2 :: c3 :: c4 :: c5 :: c6 :: c7 :: c8 :: c9 :: c10 :: c11 :: c12 :: c13 :: c14 :: c15 :: c16 :: c17 :: c18 :: c19 :: c20 :: c21 :: c22 :: c23 :: c24 :: c25 :: c26 :: c27 :: c28 :: c29 :: c30 :: c31 :: rest =>
+    have h2 : rest.length = 32 := by
+      rw [hl] at h
+      simp at h
+      omega
+    obtain ⟨c32, c33, c34, c35, c36, c37, c38, c39, c40, c41, c42, c43, c44, c45, c46, c47, c48, c49, c50, c51, c52, c53, c54, c55, c56, c57, c58, c59, c60, c61, c62, c63, hr⟩ := List.exists_len32 rest h2
+    exact ⟨c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20, c21, c22, c23, c24, c25, c26, c27, c28, c29, c30, c31, c32, c33, c34, c35, c36, c37, c38, c39, c40, c41, c42, c43, c44, c45, c46, c47, c48, c49, c50, c51, c52, c53, c54, c55, c56, c57, c58, c59, c60, c61, c62, c63, by rw [hr]⟩
+  | [] | [_] | [_,_] | [_,_,_] | [_,_,_,_] | [_,_,_,_,_] | [_,_,_,_,_,_] | [_,_,_,_,_,_,_] => simp [hl] at h
+  | [_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] => simp [hl] at h
+  | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] => simp [hl] at h
+  | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] | [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_] => simp [hl] at h
+
+/-- Generic ok-inversion of one monadic bind: a successful chain names the
+    intermediate and its defining equation. -/
+theorem bind_ok_inv {α β : Type} {e : Result α} {f : α → Result β} {b : β}
+    (h : (do let x ← e; f x) = ok b) : ∃ a, e = ok a ∧ f a = ok b := by
+  cases he : e with
+  | ok v =>
+    refine ⟨v, rfl, ?_⟩
+    rw [he] at h
+    simpa using h
+  | fail err =>
+    rw [he] at h
+    simp [Bind.bind, Aeneas.Std.bind] at h
+  | div =>
+    rw [he] at h
+    simp [Bind.bind, Aeneas.Std.bind] at h
+
+open ed25519_dalek in
+/-- **Inversion of the recompute chain**: a successful recompute names its
+    intermediates — the hash output, the reduced scalar k, the negated key
+    point, and the dsm result — each with its defining equation. (The SHA
+    calls are oracles: axioms cannot be walked, so the chain is inverted
+    from the hypothesis, mirroring the apex's hypothesis-parametric form.) -/
+theorem recompute_inv (key : verifying.VerifyingKey)
+    (sig : signature.InternalSignature) (msg : Slice Std.U8)
+    (er : curve25519_dalek.edwards.CompressedEdwardsY)
+    (hrec : verifying.recompute_r_sha512 key sig msg = ok er) :
+    ∃ (hash : Std.Array Std.U8 64#usize) (k : scalar.Scalar)
+      (mA ep : EdPoint),
+      scalar.Scalar.from_bytes_mod_order_wide hash = ok k ∧
+      edwards.EdwardsPoint.Insts.CoreOpsArithNegEdwardsPoint.neg key.point = ok mA ∧
+      edwards.EdwardsPoint.vartime_double_scalar_mul_basepoint k mA sig.s = ok ep ∧
+      edwards.EdwardsPoint.compress ep = ok er := by
+  unfold verifying.recompute_r_sha512 at hrec
+  simp only [curve25519_dalek.edwards.CompressedEdwardsY.as_bytes, lift,
+    bind_tc_ok] at hrec
+  obtain ⟨h0, _, hrec⟩ := bind_ok_inv hrec
+  obtain ⟨h1, _, hrec⟩ := bind_ok_inv hrec
+  obtain ⟨h2, _, hrec⟩ := bind_ok_inv hrec
+  obtain ⟨h3, _, hrec⟩ := bind_ok_inv hrec
+  obtain ⟨hash, _, hrec⟩ := bind_ok_inv hrec
+  obtain ⟨k, hk, hrec⟩ := bind_ok_inv hrec
+  obtain ⟨mA, hmA, hrec⟩ := bind_ok_inv hrec
+  obtain ⟨ep, hep, hrec⟩ := bind_ok_inv hrec
+  exact ⟨hash, k, mA, ep, hk, hmA, hep, hrec⟩
+
+open ed25519_dalek in
+/-- **THE HALF-LIFT: the verifier accepts iff the signature's R bytes are
+    the canonical encoding of the recomputed point.** For a parsing
+    signature (`hparse`), a valid on-curve public-key point, a canonical
+    signature scalar, and a successful recompute (`hrec` — the SHA calls
+    are oracles, hence hypothesis-parametric like the apex itself), there
+    is a point R' — [k](−A) + [s]B over the certified model — with
+        accept  ⇔  bytesVal R_bytes = (edY R').val + ((edX R').val % 2)·2²⁵⁵.
+    The byte-for-byte comparison of the apex IS point-encoding equality. -/
+theorem verify_accepts_iff_point
+    (key : verifying.VerifyingKey) (msg : Slice Std.U8) (sig : ed25519.Signature)
+    (val : signature.InternalSignature)
+    (er : curve25519_dalek.edwards.CompressedEdwardsY)
+    (e r1 : Std.Array Std.U8 32#usize)
+    (hparse : signature.InternalSignature.Insts.CoreConvertTryFromShared0SignatureError.try_from sig
+        = ok (core.result.Result.Ok val))
+    (hrec : verifying.recompute_r_sha512 key val msg = ok er)
+    (he : curve25519_dalek.edwards.CompressedEdwardsY.as_bytes er = ok e)
+    (hr1 : curve25519_dalek.edwards.CompressedEdwardsY.as_bytes val.R = ok r1)
+    (hkv : ExtValid key.point) (hkc : OnCurveExt key.point)
+    (t0 t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 t12 t13 t14 t15 t16 t17 t18 t19 t20 t21 t22 t23 t24 t25 t26 t27 t28 t29 t30 t31 : Std.U8)
+    (hsb : (↑val.s.bytes : List Std.U8) = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29, t30, t31])
+    (Vs : ℕ) (hVs : Vs = t0.val + t1.val * 2^8 + t2.val * 2^16 + t3.val * 2^24 + t4.val * 2^32 + t5.val * 2^40 + t6.val * 2^48 + t7.val * 2^56 + t8.val * 2^64 + t9.val * 2^72 + t10.val * 2^80 + t11.val * 2^88 + t12.val * 2^96 + t13.val * 2^104 + t14.val * 2^112 + t15.val * 2^120 + t16.val * 2^128 + t17.val * 2^136 + t18.val * 2^144 + t19.val * 2^152 + t20.val * 2^160 + t21.val * 2^168 + t22.val * 2^176 + t23.val * 2^184 + t24.val * 2^192 + t25.val * 2^200 + t26.val * 2^208 + t27.val * 2^216 + t28.val * 2^224 + t29.val * 2^232 + t30.val * 2^240 + t31.val * 2^248)
+    (hVslt : Vs < 2^253) :
+    ∃ (R' : EdPoint), ExtValid R' ∧ OnCurveExt R' ∧
+      (verifying.verify_sha512 key msg sig = ok (core.result.Result.Ok ())
+        ↔ bytesVal r1 = (edY R').val + ((edX R').val % 2) * 2^255) := by
+  obtain ⟨hash, k, mA, ep, hk, hmA, hep, hcomp⟩ := recompute_inv key val msg er hrec
+  -- k is canonical (< ℓ < 2²⁵³)
+  obtain ⟨c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20, c21, c22, c23, c24, c25, c26, c27, c28, c29, c30, c31, c32, c33, c34, c35, c36, c37, c38, c39, c40, c41, c42, c43, c44, c45, c46, c47, c48, c49, c50, c51, c52, c53, c54, c55, c56, c57, c58, c59, c60, c61, c62, c63, hhl⟩ := Bytes64.exists_bytes hash
+  obtain ⟨k', hk', hkpost⟩ := spec_imp_exists
+    (ScalarProofs.from_bytes_mod_order_wide_spec hash c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 c20 c21 c22 c23 c24 c25 c26 c27 c28 c29 c30 c31 c32 c33 c34 c35 c36 c37 c38 c39 c40 c41 c42 c43 c44 c45 c46 c47 c48 c49 c50 c51 c52 c53 c54 c55 c56 c57 c58 c59 c60 c61 c62 c63 hhl _ rfl)
+  rw [hk] at hk'
+  have hkk : k = k' := by simpa using hk'
+  subst hkk
+  obtain ⟨hklt, -⟩ := hkpost
+  obtain ⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30, a31, hkbl⟩ := Bytes32.exists_bytes k.bytes
+  have hkval : bytesVal k.bytes = a0.val + a1.val * 2^8 + a2.val * 2^16 + a3.val * 2^24 + a4.val * 2^32 + a5.val * 2^40 + a6.val * 2^48 + a7.val * 2^56 + a8.val * 2^64 + a9.val * 2^72 + a10.val * 2^80 + a11.val * 2^88 + a12.val * 2^96 + a13.val * 2^104 + a14.val * 2^112 + a15.val * 2^120 + a16.val * 2^128 + a17.val * 2^136 + a18.val * 2^144 + a19.val * 2^152 + a20.val * 2^160 + a21.val * 2^168 + a22.val * 2^176 + a23.val * 2^184 + a24.val * 2^192 + a25.val * 2^200 + a26.val * 2^208 + a27.val * 2^216 + a28.val * 2^224 + a29.val * 2^232 + a30.val * 2^240 + a31.val * 2^248 := by
+    simp only [bytesVal, hkbl]
+  have hValt : (a0.val + a1.val * 2^8 + a2.val * 2^16 + a3.val * 2^24 + a4.val * 2^32 + a5.val * 2^40 + a6.val * 2^48 + a7.val * 2^56 + a8.val * 2^64 + a9.val * 2^72 + a10.val * 2^80 + a11.val * 2^88 + a12.val * 2^96 + a13.val * 2^104 + a14.val * 2^112 + a15.val * 2^120 + a16.val * 2^128 + a17.val * 2^136 + a18.val * 2^144 + a19.val * 2^152 + a20.val * 2^160 + a21.val * 2^168 + a22.val * 2^176 + a23.val * 2^184 + a24.val * 2^192 + a25.val * 2^200 + a26.val * 2^208 + a27.val * 2^216 + a28.val * 2^224 + a29.val * 2^232 + a30.val * 2^240 + a31.val * 2^248) < 2^253 := by
+    have hEll : ScalarProofs.Ell < 2^253 := by unfold ScalarProofs.Ell; norm_num
+    omega
+  -- mA = −A, valid and on-curve
+  unfold edwards.EdwardsPoint.Insts.CoreOpsArithNegEdwardsPoint.neg at hmA
+  obtain ⟨mA', hmA', hmApost⟩ := spec_imp_exists (edwards_neg_law key.point hkv hkc)
+  rw [hmA'] at hmA
+  have hmm : mA = mA' := by simpa using hmA.symm
+  subst hmm
+  obtain ⟨hmAv, hmAc, -⟩ := hmApost
+  -- ep = [k](−A) + [s]B, valid and on-curve
+  obtain ⟨ep', hep', heppost⟩ := spec_imp_exists
+    (vartime_dsm_basepoint_spec k val.s mA
+      a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20 a21 a22 a23 a24 a25 a26 a27 a28 a29 a30 a31 t0 t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 t12 t13 t14 t15 t16 t17 t18 t19 t20 t21 t22 t23 t24 t25 t26 t27 t28 t29 t30 t31
+      hkbl hsb _ Vs rfl hVs hValt hVslt hmAv hmAc)
+  rw [hep'] at hep
+  have hee' : ep = ep' := by simpa using hep.symm
+  subst hee'
+  obtain ⟨hepv, hepc, -⟩ := heppost
+  -- er is the canonical encoding of ep
+  obtain ⟨er2, hcomp', hcpost⟩ := spec_imp_exists (ed_compress_spec ep hepv)
+  rw [hcomp'] at hcomp
+  have her : er = er2 := by simpa using hcomp.symm
+  subst her
+  -- e IS er (as_bytes is the identity)
+  have hee : er = e := by
+    have : curve25519_dalek.edwards.CompressedEdwardsY.as_bytes er = ok er := by
+      simp [curve25519_dalek.edwards.CompressedEdwardsY.as_bytes]
+    rw [this] at he
+    simpa using he
+  refine ⟨ep, hepv, hepc, ?_⟩
+  rw [verify_accepts_iff key msg sig val er e r1 hparse hrec he hr1,
+      rangeEq_iff_bytesVal, ← hee, hcpost]
+  exact eq_comm
+
 end CurveFieldProofs

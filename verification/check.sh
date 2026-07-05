@@ -202,15 +202,16 @@ lake env bash -c "
   cd '$HERE'
   ALLOWED='[propext, Classical.choice, Quot.sound, ed25519.Signature, sha2.Sha512, verifying.sha512_finalize_bytes, verifying.sha512_new, verifying.sha512_update, ed25519.Signature.to_bytes, signature.error.Error, signature.error.Error.new]'
   AUD=\$(mktemp '$HERE/.apex-XXXX.lean')
-  { echo 'import Proofs.SigApexSpec'; echo '#print axioms CurveFieldProofs.verify_accepts_iff'; } > \"\$AUD\"
+  { echo 'import Proofs.SigApexSpec'; echo 'import Proofs.PointLiftSpec'; echo '#print axioms CurveFieldProofs.verify_accepts_iff'; echo '#print axioms CurveFieldProofs.verify_accepts_iff_point'; } > \"\$AUD\"
   OUT=\$(LEAN_TIMEOUT=$TIMEOUT LEAN_MEM_MB=4096 '$HERE/lean-guard' \"\$AUD\" 2>&1)
   echo \"\$OUT\"
   rm -f \"\$AUD\"
   FLAT=\$(echo \"\$OUT\" | tr '\\n' ' ' | tr -s ' ')
-  if echo \"\$FLAT\" | grep -qF \"depends on axioms: \$ALLOWED\"; then
-    echo '  apex axiom cone = exactly the SHA-512 + wire-format boundary (no curve/scalar/backend axioms)'
+  if echo \"\$FLAT\" | grep -qF \"'CurveFieldProofs.verify_accepts_iff' depends on axioms: \$ALLOWED\" \
+     && echo \"\$FLAT\" | grep -qF \"'CurveFieldProofs.verify_accepts_iff_point' depends on axioms: \$ALLOWED\"; then
+    echo '  apex + half-lift axiom cones = exactly the SHA-512 + wire-format boundary (no curve/scalar/backend axioms)'
   else
-    echo 'APEX AUDIT FAILED: verify_accepts_iff cone is not the documented boundary'; exit 1
+    echo 'APEX AUDIT FAILED: apex/half-lift cone is not the documented boundary'; exit 1
   fi
 "
 
