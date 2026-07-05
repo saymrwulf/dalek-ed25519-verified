@@ -139,4 +139,103 @@ theorem fe_ct_eq_spec (a b : Fe) :
     refine ⟨Or.inl rfl, fun h01 => absurd h01 (by norm_num), fun hab => ?_⟩
     exact absurd (hbridge.mpr hab) heq
 
+/-- u64 constant-time assign keeps `self` iff the choice is 0 (rfl on the
+    FunsExternal model; restated locally — Proofs.Basic is a parallel root
+    that clashes with the ConstSpecs chain). -/
+theorem u64_cond_assign (a b : Std.U64) (c : subtle.Choice) :
+    U64.Insts.SubtleConditionallySelectable.conditional_assign a b c
+      = ok (if c.val = 0 then a else b) := rfl
+
+/-- **Limb-wise constant-time selection on field elements**: keeps `self`
+    iff the choice is 0 — the in-place flavor `sqrt_ratio_i` uses twice
+    (root flip and sign normalization). -/
+theorem fe_cond_assign_spec (a b : Fe) (c : subtle.Choice)
+    (x0 x1 x2 x3 x4 y0 y1 y2 y3 y4 : U64)
+    (ha : (↑a : List U64) = [x0, x1, x2, x3, x4])
+    (hb : (↑b : List U64) = [y0, y1, y2, y3, y4]) :
+    backend.serial.u64.field.FieldElement51.Insts.SubtleConditionallySelectable.conditional_assign
+      a b c
+      ⦃ r => (↑r : List U64)
+        = if c.val = 0 then [x0, x1, x2, x3, x4] else [y0, y1, y2, y3, y4] ⦄ := by
+  unfold backend.serial.u64.field.FieldElement51.Insts.SubtleConditionallySelectable.conditional_assign
+  step as ⟨i0, back0, hi0, hback0⟩
+  step as ⟨i1, hi1⟩
+  try simp only [u64_cond_assign, bind_tc_ok]
+  step as ⟨i3, back1, hi3, hback1⟩
+  try simp only [hback0] at *
+  step as ⟨i4, hi4⟩
+  try simp only [u64_cond_assign, bind_tc_ok]
+  step as ⟨i6, back2, hi6, hback2⟩
+  try simp only [hback1] at *
+  step as ⟨i7, hi7⟩
+  try simp only [u64_cond_assign, bind_tc_ok]
+  step as ⟨i9, back3, hi9, hback3⟩
+  try simp only [hback2] at *
+  step as ⟨i10, hi10⟩
+  try simp only [u64_cond_assign, bind_tc_ok]
+  step as ⟨i12, back4, hi12, hback4⟩
+  try simp only [hback3] at *
+  step as ⟨i13, hi13⟩
+  try simp only [u64_cond_assign, bind_tc_ok]
+  try simp only [spec_ok]
+  by_cases hc : c.val = 0
+  · simp only [hc, if_pos rfl] at *
+    simp_all [Array.set_val_eq, ha, hb]
+  · simp only [if_neg hc] at *
+    simp_all [Array.set_val_eq, ha, hb]
+
+/-- **THE SQUARE-ROOT CORE** (pure 𝔽_p): if u/v is a square (witness x)
+    with v ≠ 0, the candidate r = (u·v³)·(u·v⁷)^((p−5)/8) satisfies
+    v·r² = ±u — the algebraic heart of `sqrt_ratio_i`. The v-part of the
+    exponent collapses by Fermat; the residual x^((p−1)/2) is ±1. -/
+theorem sqrt_core (u v x : Fp) (hv : v ≠ 0) (hx : x ^ 2 * v = u) :
+    v * (u * v^3 * (u * v^7)^(2^252 - 3))^2 = u ∨
+    v * (u * v^3 * (u * v^7)^(2^252 - 3))^2 = -u := by
+  haveI : Fact (Nat.Prime P) := ⟨P_prime⟩
+  by_cases hx0 : x = 0
+  · -- x = 0 forces u = 0 and the candidate is 0 = u
+    left
+    have hu : u = 0 := by rw [← hx, hx0]; ring
+    rw [hu]
+    ring
+  · set w : Fp := u * v^7 with hwdef
+    have hw : w = x^2 * v^8 := by rw [hwdef, ← hx]; ring
+    have hfer_v : v ^ (P - 1) = 1 := ZMod.pow_card_sub_one_eq_one hv
+    have hfer_x2 : (x ^ ((P-1)/2))^2 = 1 := by
+      rw [← pow_mul]
+      have he : (P-1)/2 * 2 = P - 1 := by unfold P; norm_num
+      rw [he]
+      exact ZMod.pow_card_sub_one_eq_one hx0
+    have hpm : x ^ ((P-1)/2) = 1 ∨ x ^ ((P-1)/2) = -1 := by
+      have hfac : (x ^ ((P-1)/2) - 1) * (x ^ ((P-1)/2) + 1) = 0 := by
+        linear_combination hfer_x2
+      rcases mul_eq_zero.mp hfac with h' | h'
+      · left; linear_combination h'
+      · right; linear_combination h'
+    have hkey : v * (u * v^3 * w^(2^252 - 3))^2 = u * x^((P-1)/2) := by
+      have h1 : v * (u * v^3 * w^(2^252-3))^2 = u * w * (w^(2^252-3))^2 := by
+        rw [hwdef]; ring
+      have h2 : (w^(2^252-3) : Fp)^2 = w^(2^253-6) := by
+        rw [← pow_mul]
+        norm_num
+      have h3 : (u * w * w^(2^253-6) : Fp) = u * w^(2^253-5) := by
+        have : (w * w^(2^253-6) : Fp) = w^(2^253-5) := by
+          rw [← pow_succ']
+          norm_num
+        rw [mul_assoc, this]
+      rw [h1, h2, h3, hw]
+      have h4 : ((x^2 * v^8 : Fp))^(2^253-5) = x^(2^254-10) * v^(2^256-40) := by
+        rw [mul_pow, ← pow_mul, ← pow_mul]
+        norm_num
+      rw [h4]
+      have h5 : (v : Fp)^(2^256-40) = 1 := by
+        have he : (2^256 - 40 : ℕ) = (P - 1) * 2 := by unfold P; norm_num
+        rw [he, pow_mul, hfer_v, one_pow]
+      have h6 : (2^254 - 10 : ℕ) = (P-1)/2 := by unfold P; norm_num
+      rw [h5, h6]
+      ring
+    rcases hpm with h | h
+    · left; rw [hkey, h, mul_one]
+    · right; rw [hkey, h]; ring
+
 end CurveFieldProofs

@@ -98,6 +98,7 @@ CERTS=(
   CurveFieldProofs.enc_point_inj
   CurveFieldProofs.pow_p58_spec
   CurveFieldProofs.fe_ct_eq_spec
+  CurveFieldProofs.sqrt_core
 )
 # Imports needed so every certificate in CERTS is in scope for the audit.
 AUDIT_IMPORTS=(
