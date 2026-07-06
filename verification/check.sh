@@ -226,7 +226,7 @@ lake env bash -c "
      && echo \"\$FLAT\" | grep -qF \"'CurveFieldProofs.verify_accepts_iff_point' depends on axioms: \$ALLOWED\" \
      && echo \"\$FLAT\" | grep -qF \"'CurveFieldProofs.verify_accepts_iff_point_eq' depends on axioms: \$ALLOWED\" \
      && echo \"\$FLAT\" | grep -qF \"'CurveFieldProofs.verify_accepts_iff_decompress' depends on axioms: \$ALLOWED\"; then
-    echo '  apex + half-lift axiom cones = exactly the SHA-512 + wire-format boundary (no curve/scalar/backend axioms)'
+    echo '  apex + full-lift axiom cones = exactly the SHA-512 + wire-format boundary (no curve/scalar/backend axioms)'
   else
     echo 'APEX AUDIT FAILED: apex/half-lift cone is not the documented boundary'; exit 1
   fi

@@ -5,7 +5,7 @@ coherent proof pyramid in Lean 4 via the Charon/Aeneas transpilation pipeline:
 
 ```
         ┌──────────────────────────────┐
-        │  Signature (EdDSA verify)    │   accepted ⇔ compress([s]B−[k]A) = R
+        │  Signature (EdDSA verify)    │   accepted ⇔ decompress(R) = [k](−A)+[s]B
         ├──────────────────────────────┤
         │  Scalar arithmetic mod ℓ     │   Scalar52 ops correct mod ℓ
         ├──────────────────────────────┤
@@ -28,15 +28,15 @@ in this repository.
 | Field 𝔽_p          | `fieldImplementation`    | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
 | Group law (Edwards) | `edwardsImplementation`  | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
 | Scalar mod ℓ        | `scalarImplementation` (add ✅ sub ✅ mul ✅) | ✅ proven | `[propext, Classical.choice, Quot.sound]` |
-| Signature (EdDSA)   | `verify_accepts_iff` | ✅ proven (phase 1) | standard three + the button-enforced SHA-512/wire-format boundary — see [The signature apex](#the-signature-apex-phase-1) |
+| Signature (EdDSA)   | `verify_accepts_iff` … `verify_accepts_iff_decompress` (4 tiers) | ✅ proven (phases 1+2) | standard three + the button-enforced SHA-512/wire-format boundary — see [The signature apex](#the-signature-apex-phases-1-and-2) |
 
 Status legend: ✅ proven & axiom-audited · ⏳ in progress · ❌ not started.
 This table is updated only when `verification/check.sh` passes for the layer.
 
-## The signature apex (phase 1)
+## The signature apex (phases 1 and 2)
 
-The apex certificate `CurveFieldProofs.verify_accepts_iff` is the literal EdDSA
-acceptance criterion, proven about the extracted verifier:
+The byte-level apex certificate `CurveFieldProofs.verify_accepts_iff` is the
+literal EdDSA acceptance criterion, proven about the extracted verifier:
 
 > For a signature that parses, the verifier returns `Ok(())` **iff** the
 > recomputed compressed point `compress([s]·B − [k]·A)` equals the signature's
@@ -58,16 +58,30 @@ boundary. Zero curve, scalar, or backend axioms. The companion certificate
 `verify_loop_full` (the 32-byte comparison loop computes array equality)
 carries the standard three axioms only.
 
-**Phase 2 (deferred, documented):** lifting the byte-level equation to the
-point level (`[s]B − [k]A = decompress R`) additionally needs `compress`
-canonicity and a verified `decompress`; it is deliberately out of scope for
-this milestone, mirroring the layer-by-layer phase split used below the apex.
+**Phase 2 (complete): the point-level lift.** Phase 3b enforces the SAME
+axiom boundary on three further tiers that lift the byte equation to points:
+
+| Tier | Certificate | Statement |
+|------|-------------|-----------|
+| half-lift | `verify_accepts_iff_point` | accepted ⇔ R = the **canonical encoding** of `[k]·(−A) + [s]·B` (compress semantics + `to_bytes` canonicity + hash-to-scalar, recompute chain inverted) |
+| point equation | `verify_accepts_iff_point_eq` | for any valid on-curve `Q` canonically encoded by R: accepted ⇔ `Q = [k]·(−A) + [s]·B` **as points** (encoding-injectivity: d non-square + parity root-selection) |
+| full lift | `verify_accepts_iff_decompress` | R **decompresses** to a valid on-curve `Pt`, and accepted ⇔ `Pt = [k]·(−A) + [s]·B` — the constructive capstone |
+
+The full lift runs through the extracted `CompressedEdwardsY::decompress`
+itself, proven end-to-end: `from_bytes` parses the y-residue exactly below
+bit 255 (`from_bytes_spec`), `sqrt_ratio_i` returns the even square root of
+`(y²−1)/(dy²+1)` (`sqrt_ratio_i_sq_spec`, Fermat-exponent square root), and
+the sign bit selects the x-parity (`decompress_of_canonical`, standard three
+axioms). Byte comparison ↔ encoding equality ↔ point equality ↔
+decompressed-point equality: every link is machine-checked over the
+extracted code, and `check.sh` fails the build if any of the four tiers'
+cones deviates from the boundary above.
 
 
 ## Source
 
 - **Upstream**: [dalek-cryptography/curve25519-dalek](https://github.com/dalek-cryptography/curve25519-dalek), commit `4cf8db2`
-- **Pinned/patched source**: [saymrwulf/curve25519-dalek-source](https://github.com/saymrwulf/curve25519-dalek-source), commit `135ed70`
+- **Pinned/patched source**: [saymrwulf/curve25519-dalek-source](https://github.com/saymrwulf/curve25519-dalek-source), commit `aa0f6ab` (adds the decompress step_2 negate-then-assign patch)
 - **Patches**: minimal Aeneas-compatibility only (documented in the source repo)
 - Verified backend: `backend/serial/u64` (`FieldElement51`, `Scalar52`). SIMD/AVX backends are out of scope (marked opaque).
 

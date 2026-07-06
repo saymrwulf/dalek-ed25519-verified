@@ -5,9 +5,11 @@
 #   roots: crate::field, crate::backend::serial::u64::field,
 #          crate::backend::serial::curve_models, crate::edwards
 #   (same widening the reference solution used for its Tier-1 addition-law
-#    theorem; scalar-mul backends and decompress internals stay opaque —
-#    upstream Aeneas cannot translate them; they are modeled/axiomatized in
-#    gen/CurveField/FunsExternal.lean OUTSIDE every certificate's cone).
+#    theorem; scalar-mul backends stay opaque — upstream Aeneas cannot
+#    translate them; they are modeled/axiomatized in
+#    gen/CurveField/FunsExternal.lean OUTSIDE every certificate's cone.
+#    decompress IS extracted since the phase-2 full lift — the source's
+#    step_2 uses the documented negate-then-conditional-assign rewrite).
 #
 #   Rust --charon--> CurveField.llbc --aeneas--> gen/CurveField/*.lean
 #
