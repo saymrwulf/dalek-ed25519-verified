@@ -22,3 +22,10 @@ def corpus : Array Name :=
   #[`Proofs.Basic]
 
 #eval show MetaM Unit from emitInventory corpus
+
+-- This driver accounts for ITS OWN declarations only. `Proofs.InventoryCore`
+-- is shared machinery and is accounted by `Proofs/Inventory.lean`; counting it
+-- here as well would make the two walks overlap and the kernel-count identity
+-- in check.sh Phase 2c would fail — correctly, since a declaration would then
+-- be accounted twice.
+#eval show MetaM Unit from emitDrivers #[]
